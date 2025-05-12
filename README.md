@@ -1,4 +1,4 @@
-Ejercicio Final – API de Ventas en Go
+# Ejercicio Final – API de Ventas en Go
 Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando Gin. Ahora vamos a extender nuestro sistema para manejar ventas (sales/transactions).
 ### 1.Objetivos
 -  Diseñar e implementar una nueva API sales-api en Go. La misma deberá brindar los siguientes endpoints:
@@ -18,7 +18,17 @@ Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando
 -  Guarda la venta usando una capa de storage (puede ser en memoria).
 
 -  Devuelve un json parecido a esto:
-
+```json
+{
+  "id": "60242af5-d080-49a4-9b07-4e63992094ef",
+  "user_id": "60242af5-d080-49a4-9b07-4e63992094ef",
+  "amount": 100.00,
+  "status": "approved",
+  "created_at": "2025-04-21T20:17:29.673021-03:00",
+  "updated_at": "2025-04-21T20:17:29.673022-03:00",
+  "version": 1
+}
+```
 
 
 -  El campo created_at y updated_at deberán ser del tipo time.Time.
@@ -52,7 +62,37 @@ Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando
 
 La firma de respuesta de este endpoint deberá ser de la siguiente manera:
 
-
+```json
+{
+  "metadata": {
+    "quantity": 2,
+    "approved": 1,
+    "rejected": 1,
+    "pending": 0,
+    "total_amount": 300.0
+  },
+  "results": [
+    {
+      "id": "60242af5-d080-49a4-9b07-4e63992094ef",
+      "user_id": "60242af5-d080-49a4-9b07-4e63992094ef",
+      "amount": 100.0,
+      "status": "approved",
+      "created_at": "2025-04-21T20:17:29.673021-03:00",
+      "updated_at": "2025-04-21T20:17:29.673021-03:00",
+      "version": 1
+    },
+    {
+      "id": "50242af5-d080-49a4-9b07-4e63992094ef",
+      "user_id": "60242af5-d080-49a4-9b07-4e63992094ef",
+      "amount": 200.0,
+      "status": "rejected",
+      "created_at": "2025-04-21T20:17:29.673021-03:00",
+      "updated_at": "2025-04-21T20:17:29.673022-03:00",
+      "version": 1
+    }
+  ]
+}
+```
 
 ## Detalles Técnicos
 -  El código de la API se deberá subir a un repositorio público de Github de alguno de los miembros del grupo de trabajo para que pueda ser revisado.
