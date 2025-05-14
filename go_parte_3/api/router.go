@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
+	"parte3/internal/sale"
 	"parte3/internal/user"
 )
 
@@ -32,4 +33,14 @@ func InitRoutes(e *gin.Engine) {
 			"message": "pong",
 		})
 	})
+
+	// … ventas ↓
+	saleStorage := sale.NewLocalStorage()
+	saleSvc := sale.NewService(saleStorage, logger, "http://localhost:8080") // base URL local
+	saleH := saleHandler{svc: saleSvc}
+
+	e.POST("/sales", saleH.handleCreate)
+	e.PATCH("/sales/:id", saleH.handlePatch)
+	e.GET("/sales", saleH.handleSearch)
+
 }
