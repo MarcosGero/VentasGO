@@ -36,11 +36,11 @@ func InitRoutes(e *gin.Engine) {
 
 	// … ventas ↓
 	saleStorage := sale.NewLocalStorage()
-	saleSvc := sale.NewService(saleStorage, logger, "http://localhost:8080") // base URL local
-	saleH := saleHandler{svc: saleSvc}
+	saleSvc := sale.NewService(saleStorage) // base URL local
+	saleH := NewSaleHandler(saleSvc)
 
-	e.POST("/sales", saleH.handleCreate)
-	e.PATCH("/sales/:id", saleH.handlePatch)
-	e.GET("/sales", saleH.handleSearch)
+	e.POST("/sales", saleH.Create)
+	//e.PATCH("/sales/:id", saleH.handlePatch)
+	//e.GET("/sales", saleH.handleSearch)
 
 }
