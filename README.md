@@ -35,7 +35,7 @@ Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando
 
 -  El campo version deberá ser un int. Empieza en 1.
 
-### 2.Actualización de una venta: PATCH /sales/:id
+### 2. Actualización de una venta: PATCH /sales/:id
 
 -  Lo único que debe recibir este endpoint es un JSON con un campo status el cual sólo podrá afectar a las ventas que queden en estado pending. 
 
@@ -45,7 +45,7 @@ Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando
 
 -  La respuesta de este endpoint deberá ser la misma que en el punto 1, sólo que con la fecha de actualización, versión y estado actualizado.
 
-### 3.Search de ventas: GET /sales?user_id={{user_id}}&status={{status}}
+### 3. Search de ventas: GET /sales?user_id={{user_id}}&status={{status}}
 
 -  Este endpoint deberá buscar todas las ventas de un usuario particular.
 
