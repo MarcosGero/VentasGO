@@ -1,6 +1,6 @@
 # Ejercicio Final – API de Ventas en Go
 Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando Gin. Ahora vamos a extender nuestro sistema para manejar ventas (sales/transactions).
-### 1.Objetivos
+### 1. Objetivos
 -  Diseñar e implementar una nueva API sales-api en Go. La misma deberá brindar los siguientes endpoints:
 
 -  Creación de una nueva venta: POST /sales
