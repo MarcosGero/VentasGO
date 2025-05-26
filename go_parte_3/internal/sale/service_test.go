@@ -1,27 +1,33 @@
-package sale_test
+package sale
 
 import (
-	//"errors"
 	"net/http"
-	"parte3/internal/sale"
+	"net/http/httptest"
 	"testing"
 
-	//"github.com/go-resty/resty/v2"
-	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
-type fakeHTTP struct{ code int }
+func TestCreateSaleWithNonExistentUser(t *testing.T) {
+	mockHandler := http.NewServeMux()
 
-func (f fakeHTTP) RoundTrip(*http.Request) (*http.Response, error) {
-	return &http.Response{StatusCode: f.code, Body: http.NoBody}, nil
-}
+	mockHandler.HandleFunc("/users/", func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	})
 
-func TestCreate_UserNotFound(t *testing.T) {
-	st := sale.NewLocalStorage()
-	svc := sale.NewService(st, nil, "http://fake")
-	// stub resty transport
-	//svc.Client().GetClient().Transport = fakeHTTP{code: http.StatusNotFound}
+	mockServer := httptest.NewServer(mockHandler)
+	defer mockServer.Close()
 
-	_, err := svc.Create("abc", 10)
-	require.ErrorIs(t, err, sale.ErrUserNotFound)
+	logger, _ := zap.NewDevelopment()
+	storage := NewLocalStorage()
+	service := NewService(storage, logger, mockServer.URL)
+
+	sale, err := service.Create("non-existent-user", 150.0)
+
+	if err != ErrUserNotFound {
+		t.Errorf("expected ErrUserNotFound, got %v", err)
+	}
+	if sale != nil {
+		t.Errorf("expected no sale to be created, got %+v", sale)
+	}
 }
