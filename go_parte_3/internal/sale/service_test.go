@@ -9,18 +9,19 @@ import (
 )
 
 func TestCreateSaleWithNonExistentUser(t *testing.T) {
-	mockHandler := http.NewServeMux()
 
+
+	mockHandler := http.NewServeMux()
 	mockHandler.HandleFunc("/users/", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
-
 	mockServer := httptest.NewServer(mockHandler)
 	defer mockServer.Close()
 
 	logger, _ := zap.NewDevelopment()
 	storage := NewLocalStorage()
 	service := NewService(storage, logger, mockServer.URL)
+
 
 	sale, err := service.Create("non-existent-user", 150.0)
 
