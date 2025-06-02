@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// handler holds the user service and implements HTTP handlers for user CRUD.
 type handler struct {
 	userService *user.Service
 	logger      *zap.Logger
