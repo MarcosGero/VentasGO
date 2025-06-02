@@ -1,0 +1,16 @@
+### Crear un usuario (requerido antes de vender)
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "name": "Juan"
+}
+
+### Crear venta para id
+POST http://localhost:8080/sales
+Content-Type: application/json
+
+{
+  "user_id": "d9b7352b-0910-4f32-b5b9-db9560259bc5",
+  "amount": 150.0
+}
