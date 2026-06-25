@@ -66,7 +66,7 @@ Devuelve todas las ventas de un usuario. El filtro `status` es opcional; si se e
 - **Comunicación entre servicios.** La validación del usuario se hace contra la API de usuarios por HTTP, simulando un escenario de microservicios en vez de asumir que el dato es válido.
 - **Observabilidad.** Logging estructurado con zap para poder rastrear el flujo de las requests.
 
-## Cómo correrlo
+## Ejecucion
 
 > Requiere la API de usuarios corriendo en paralelo, ya que la creación de ventas la consulta.
 
