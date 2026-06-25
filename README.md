@@ -1,23 +1,25 @@
-# Ejercicio Final – API de Ventas en Go
-Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando Gin. Ahora vamos a extender nuestro sistema para manejar ventas (sales/transactions).
-### 1. Objetivos
--  Diseñar e implementar una nueva API sales-api en Go. La misma deberá brindar los siguientes endpoints:
+# API de Ventas en Go
 
--  Creación de una nueva venta: POST /sales
+API REST en Go para la gestión de ventas, con validación entre servicios, máquina de estados y observabilidad básica. Desarrollada como ejercicio final de un curso de Go: extiende una API de usuarios base (provista en el curso) agregando el dominio completo de ventas, su lógica de negocio y sus pruebas.
 
--  Recibe JSON con user_id y amount.
+## Qué hace
 
--  Valida que el user_id exista llamando a GET /users/:id.
+El servicio expone una API de ventas (`sales-api`) que se comunica con una API de usuarios independiente para validar datos antes de operar. Cada venta atraviesa una máquina de estados con transiciones controladas, y las consultas devuelven métricas agregadas además de los resultados.
 
--  Valida que el monto no sea 0.
+## Stack
 
--  Asigna aleatoriamente uno de estos estados: pending, approved, rejected.
+- **Go** + **[Gin](https://github.com/gin-gonic/gin)** — framework HTTP
+- **[resty](https://github.com/go-resty/resty)** — cliente HTTP para la comunicación entre servicios
+- **[google/uuid](https://github.com/google/uuid)** — generación de identificadores
+- **[zap](https://github.com/uber-go/zap)** — logging estructurado
+- Almacenamiento **en memoria** (capa de storage desacoplada, intercambiable)
 
--  Debe generar el ID automáticamente.
+## Endpoints
 
--  Guarda la venta usando una capa de storage (puede ser en memoria).
+### `POST /sales` — Crear una venta
 
--  Devuelve un json parecido a esto:
+Recibe `user_id` y `amount`. Valida que el usuario exista (consultando `GET /users/:id` en la API de usuarios) y que el monto sea distinto de cero. Asigna un estado inicial (`pending`, `approved` o `rejected`), genera el `id` y persiste la venta.
+
 ```json
 {
   "id": "60242af5-d080-49a4-9b07-4e63992094ef",
@@ -30,37 +32,17 @@ Partimos del proyecto base (go_parte_3) que ya expone un CRUD de usuarios usando
 }
 ```
 
+**Respuestas:** `201` creada · `400` usuario inexistente, monto inválido o body malformado · `500` error interno.
 
--  El campo created_at y updated_at deberán ser del tipo time.Time.
+### `PATCH /sales/:id` — Actualizar el estado de una venta
 
--  El campo version deberá ser un int. Empieza en 1.
+Recibe un campo `status`. Solo opera sobre ventas en estado `pending`, y únicamente permite las transiciones `pending → approved` y `pending → rejected`. Al actualizar, incrementa la versión y la fecha de modificación.
 
-### 2. Actualización de una venta: PATCH /sales/:id
+**Respuestas:** `200` actualizada · `404` venta inexistente · `409` transición inválida (ej. `approved → rejected`) · `400` body inválido · `500` error interno.
 
--  Lo único que debe recibir este endpoint es un JSON con un campo status el cual sólo podrá afectar a las ventas que queden en estado pending. 
+### `GET /sales?user_id={id}&status={status}` — Buscar ventas
 
--  Las únicas transiciones posibles serán pending -> approved o pending -> rejected.
-
--  Deberá controlar que la venta exista y que además esté en el estado correcto para hacer el pasaje.
-
--  La respuesta de este endpoint deberá ser la misma que en el punto 1, sólo que con la fecha de actualización, versión y estado actualizado.
-
-### 3. Search de ventas: GET /sales?user_id={{user_id}}&status={{status}}
-
--  Este endpoint deberá buscar todas las ventas de un usuario particular.
-
--  En caso de que el campo status se envíe, entonces se deberá realizar un filtro, caso contrario deberá traer todas las ventas en cualquier estado.
-
--  En caso de que se pase un estado para filtrar, deberá validar que este es correcto.
-
--  En la respuesta de este endpoint, se deberá incluir un atributo metadata en donde se debe incluir:
-  - Cantidad de ventas: quantity. 
-  - Cantidad de ventas aprobadas: approved. 
-  - Cantidad de ventas rechazadas: rejected. 
-  - Cantidad de ventas pendientes: pending. 
-  - Monto total (suma del monto de todas las ventas): total_amount.
-
-La firma de respuesta de este endpoint deberá ser de la siguiente manera:
+Devuelve todas las ventas de un usuario. El filtro `status` es opcional; si se envía, se valida que sea un estado conocido. La respuesta incluye un bloque `metadata` con métricas agregadas. Si no hay resultados, `results` es un array vacío.
 
 ```json
 {
@@ -71,89 +53,47 @@ La firma de respuesta de este endpoint deberá ser de la siguiente manera:
     "pending": 0,
     "total_amount": 300.0
   },
-  "results": [
-    {
-      "id": "60242af5-d080-49a4-9b07-4e63992094ef",
-      "user_id": "60242af5-d080-49a4-9b07-4e63992094ef",
-      "amount": 100.0,
-      "status": "approved",
-      "created_at": "2025-04-21T20:17:29.673021-03:00",
-      "updated_at": "2025-04-21T20:17:29.673021-03:00",
-      "version": 1
-    },
-    {
-      "id": "50242af5-d080-49a4-9b07-4e63992094ef",
-      "user_id": "60242af5-d080-49a4-9b07-4e63992094ef",
-      "amount": 200.0,
-      "status": "rejected",
-      "created_at": "2025-04-21T20:17:29.673021-03:00",
-      "updated_at": "2025-04-21T20:17:29.673022-03:00",
-      "version": 1
-    }
-  ]
+  "results": [ /* ventas */ ]
 }
 ```
 
-## Detalles Técnicos
--  El código de la API se deberá subir a un repositorio público de Github de alguno de los miembros del grupo de trabajo para que pueda ser revisado.
+**Respuestas:** `200` con o sin resultados · `400` estado de filtro inválido · `500` error interno.
 
--  Para crear un cliente HTTP (para poder comunicarte en código con la API de usuarios) hacer uso de la librería: https://github.com/go-resty/resty.
+## Decisiones de diseño
 
--  Usar la librería https://github.com/google/uuid para crear los UUIDs de las ventas.
+- **Códigos HTTP por caso de error.** Cada endpoint distingue entre error del cliente y error del servidor, y usa `409 Conflict` específicamente para transiciones de estado inválidas en lugar de un `400` genérico, para que el consumidor de la API entienda *qué* salió mal.
+- **Capa de storage desacoplada.** La persistencia está detrás de una interfaz; esta en memoria, pero se puede reemplazar por una base de datos sin tocar la lógica de negocio.
+- **Comunicación entre servicios.** La validación del usuario se hace contra la API de usuarios por HTTP, simulando un escenario de microservicios en vez de asumir que el dato es válido.
+- **Observabilidad.** Logging estructurado con zap para poder rastrear el flujo de las requests.
 
--  No se exigirá ningún tipo de estructura particular. No obstante, pueden utilizar la API de usuarios como modelo.
+## Cómo correrlo
 
--  El guardado de las entidades “ventas” puede ser en memoria, tal cual es en la API de usuarios.
+> Requiere la API de usuarios corriendo en paralelo, ya que la creación de ventas la consulta.
 
--  El proyecto tendrá que tener AL MENOS un test unitario y un test de integración.
+```bash
+# 1. Levantar la API de usuarios (proyecto base)
+# ← agregar acá el comando según tu estructura
 
--  Un test unitario intentando crear una venta con user inexistente.
--  Un test de integración que levante Gin y pruebe un flujo completo de POST → PATCH → GET en el happy path.
+# 2. Levantar la API de ventas
+go run .          # ← ajustar si el entrypoint está en otra ruta
+```
 
--  Se apreciará el uso de técnicas de observabilidad vistas en la última clase (logs). Pueden utilizar el logger de Uber https://github.com/uber-go/zap.
+Por defecto la API queda escuchando en `http://localhost:8080`. ← *verificar el puerto en tu código*
 
--  Prestar especial atención a las respuestas HTTP ante cada error en cada uno de los endpoints. El detalle es el siguiente:
+Ejemplo de uso:
 
-**POST /sales**
+```bash
+curl -X POST http://localhost:8080/sales \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "60242af5-d080-49a4-9b07-4e63992094ef", "amount": 100.0}'
+```
 
--  Si el usuario no existe: 
-400 bad request.
+## Pruebas
 
--  Si el monto es inválido o cualquier otro error de deserialización:
-400 bad request.
+```bash
+go test ./...
+```
 
--  Cualquier otro error que se pueda producir: 
-500 internal server error.
-
--  Se creó satisfactoriamente:
-201 status created.
-
-**PATCH /sales/:id**
-
--  Si la venta no existe: 
-    404 not found.
-
--  Si el estado a transicionar es inválido o hay un error en el body:
-400 bad request.
-
--  Si se quiere realizar una transición inválida (por ejemplo pasar de approved a rejected): 
-409 status conflict.
-
--  Cualquier otro error que se pueda producir: 
-500 internal server error.
-
--  Se actualizó correctamente:
-200 status OK.
-
-**GET /sales?user_id={{user_id}}&status={{status}}**
-
--  Si el estado para buscar es inválido.
-400 bad request.
-
--  Cualquier otro error que se pueda producir: 
-500 internal server error.
-
--  Traiga o NO traiga resultados:
-200 status OK.
-
-En caso de que no traiga resultados entonces el atributo results deberá mostrar un array vacío [].
+Incluye:
+- **Test unitario:** intento de crear una venta con un usuario inexistente.
+- **Test de integración:** ejecuta un flujo completo `POST → PATCH → GET` sobre el camino feliz.
